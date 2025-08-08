@@ -1,5 +1,5 @@
 import React from 'react';
-import Home from './pages/Home/Home'
+import Home from './pages/Home/Home';
 
 export default function App() {
   return (
@@ -7,5 +7,5 @@ export default function App() {
       <Home/>
     </div>
   )
-}
+};
 
