@@ -26,11 +26,10 @@ const handleWheel = (event)=>{
 
 useEffect(()=>{
 
-fetch('https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1', options)
+  fetch('https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1', options)
   .then(res => res.json())
-  .then(res => setApiData(response.results))
+  .then(res => setApiData(Response, results))
   .catch(err => console.error(err));
-
 
   cardsRef.current.addEventListener('wheel', handleWheel);
 },[])
