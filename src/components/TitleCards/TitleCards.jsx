@@ -1,58 +1,92 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './TitleCards.css';
-import cards_data from '../../assets/cards/Cards_data';
+import { tmdb } from '../../lib/tmdb';
+import TrailerModal from '../TrailerModal/TrailerModal';
 
 
+export default function TitleCards({ title, category }) {
+  const [items, setItems] = useState([])
+  const [activeVideo, setActiveVideo] = useState(null)   // YouTube key
+const [activeTitle, setActiveTitle] = useState('Trailer')
+const [loadingVideo, setLoadingVideo] = useState(false)
 
-export default function TitleCards({title, category}) {
+  const listRef = useRef(null)
 
-const [apiData, setApiData] = useState([]);
-const cardsRef = useRef();
+  useEffect(() => {
+    let active = true
+    const path = `movie/${category || 'now_playing'}?language=en-US&page=1`
+    tmdb(path)
+      .then(d => { if (active) setItems(Array.isArray(d?.results) ? d.results : []) })
+      .catch(() => { if (active) setItems([]) })
+    return () => { active = false }
+  }, [category])
 
-const options = {
-  method: 'GET',
-  headers: {
-    accept: 'application/json',
-    Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOTNmMjliNjk0NTdlOTk0YTQ1MmJmN2ZmMjJiOWM4ZCIsIm5iZiI6MTc1NTAyOTkwNC42MjEsInN1YiI6IjY4OWJhMTkwYjhhOWQwNjZlNDhlYjZhMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.KjS5FtQl9tSj_wYWBSTovr9p2d2dulMzhs7g-sXm4Qk'
+  const openTrailer = async (movie) => {
+  if (!movie?.id) return
+  setLoadingVideo(true)
+  setActiveVideo(null)
+  setActiveTitle(movie.title || movie.original_title || movie.name || 'Trailer')
+
+  try {
+    const data = await tmdb(`movie/${movie.id}/videos?language=en-US`)
+    const results = Array.isArray(data?.results) ? data.results : []
+    const pick =
+      results.find(v => v.site === 'YouTube' && v.type === 'Trailer') ||
+      results.find(v => v.site === 'YouTube' && v.type === 'Teaser') ||
+      results.find(v => v.site === 'YouTube')
+
+    if (pick?.key) {
+      setActiveVideo(pick.key)
+    } else {
+      alert('No trailer available for this title yet.')
+    }
+  } catch {
+    alert('Failed to load trailer.')
+  } finally {
+    setLoadingVideo(false)
   }
-};
-
-
-
-const handleWheel = (event)=>{
-  event.preventDefault();
-  cardsRef.current.scrollLeft += event.deltaY;
 }
 
-useEffect(()=>{
 
-  fetch(`https://api.themoviedb.org/3/movie/${category ? category : "now_playing"}?language=en-US&page=1`, options)
-  .then(response => response.json())
-  .then(response => setApiData(response.results))
-  .catch(err => console.error(err));
-
-  if (cardsRef.current) {
-  cardsRef.current.addEventListener('wheel', handleWheel);
-}
-return() => {
-  if (cardsRef.current) {
-    cardsRef.current.removeEventListener('wheel', handleWheel);
+  const onWheel = e => {
+    e.preventDefault()
+    if (listRef.current) listRef.current.scrollLeft += e.deltaY
   }
-}
-},[])
 
   return (
-    <div className='title-cards'>
-      <h2>{title?title:"Popular on Netflix"}</h2>
-      <div className="card-list" ref={cardsRef}>
-        {apiData.map((card, index)=>{
-          return <div className="card" key={index}>
-            <img src={`https://image.tmdb.org/t/p/w500`+card.backdrop_path} alt="" />
-            <p>{card.original_title}</p>
-          </div>
-        })}
+    <div className="titlecards">
+      <h2>{title || 'Popular on Netflix'}</h2>
+      <div className="card-list" ref={listRef} onWheel={onWheel}>
+        {items.map(item => {
+          const src =
+            item.backdrop_path || item.poster_path
+              ? `https://image.tmdb.org/t/p/w500${item.backdrop_path || item.poster_path}`
+              : ''
+          const name = item.original_title || item.title || item.name || ''
+          return (
+  <div className="card" key={item.id ?? `${name}-${Math.random()}`}>
+    <button
+      className="card-btn"
+      onClick={() => openTrailer(item)}
+      disabled={loadingVideo}
+      aria-label={`Play trailer: ${name}`}
+    >
+      <img src={src} alt={name} loading="lazy" />
+      <p>{name}</p>
+    </button>
+  </div>
+)
 
+        })}
       </div>
+      {activeVideo && (
+  <TrailerModal
+    videoKey={activeVideo}
+    title={activeTitle}
+    onClose={() => setActiveVideo(null)}
+  />
+)}
+
     </div>
   )
 }
