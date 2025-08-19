@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// src/App.jsx
+import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar';
 import TitleCards from './components/TitleCards/TitleCards';
 import Account from './pages/Account.jsx';
@@ -16,12 +17,12 @@ function Browse() {
 
 export default function App() {
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Browse />} />
         <Route path="/account" element={<Account />} />
       </Routes>
-    </Router>
+    </>
   );
 }
