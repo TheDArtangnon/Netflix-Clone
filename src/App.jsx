@@ -1,28 +1,15 @@
-// src/App.jsx
-import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar/Navbar';
-import TitleCards from './components/TitleCards/TitleCards';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home/Home';
+import Login from './pages/Login/Login';
 import Account from './pages/Account.jsx';
-
-function Browse() {
-  return (
-    <div style={{ paddingTop: '90px' }}>
-      <TitleCards title="Now Playing" category="now_playing" />
-      <TitleCards title="Popular" category="popular" />
-      <TitleCards title="Top Rated" category="top_rated" />
-      <TitleCards title="Upcoming" category="upcoming" />
-    </div>
-  );
-}
 
 export default function App() {
   return (
-    <>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Browse />} />
-        <Route path="/account" element={<Account />} />
-      </Routes>
-    </>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/account" element={<Account />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
